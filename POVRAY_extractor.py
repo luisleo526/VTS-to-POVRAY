@@ -1,103 +1,112 @@
 from paraview.simple import *
 from paraview.util import Glob
 from pathlib import Path
+from argparse import ArgumentParser
 import os
 
-print("Input root_directory")
-root_directory = input()
-print("Input target variable name")
-target = input()
 
-# files = Glob(path = os.path.join(root_directory, "CaseA_30_*.vts") )
-# reader = OpenDataFile(files)
-# Show()
-# Render()
+def parse_args():
+    parser = ArgumentParser()
+    parser.add_argument("--r", "-r", type=str, help="args.r")
+    parser.add_argument("--p", "-p", type=str, help='predix of data')
+    parser.add_argument("--t", "-t", type=str, help="target variable name")
+    args = parser.parse_args()
+    return args
 
-# threshold = Threshold(Scalars=target, UpperThreshold=0.0001)
-# threshold.ThresholdMethod = 'Above Upper Threshold'
-contour = Contour()
-contour.ContourBy = target
-contour.Isosurfaces = [0.0]
-Show()
-Render()
+if __name__ == '__main__':
 
-timesteps = GetTimeKeeper().TimestepValues
-view = GetAnimationScene()
-renderView1 = GetActiveViewOrCreate('RenderView')
+    args = parse_args()
 
-Path(os.path.join(root_directory, "POV")).mkdir(parents=True, exist_ok=True)
+    files = Glob(path = os.path.join(args.r, args.p) )
+    reader = OpenDataFile(files)
+    Show()
+    Render()
 
-for i in range(len(timesteps)):
+    # threshold = Threshold(Scalars=args.t, UpperThreshold=0.0001)
+    # threshold.ThresholdMethod = 'Above Upper Threshold'
+    contour = Contour()
+    contour.ContourBy = args.t
+    contour.Isosurfaces = [0.0]
+    Show()
+    Render()
 
-    view.AnimationTime = timesteps[i]
+    timesteps = GetTimeKeeper().TimestepValues
+    view = GetAnimationScene()
+    renderView1 = GetActiveViewOrCreate('RenderView')
 
-    ExportView(os.path.join(root_directory, "POV", str(i)+'.pov'), view=renderView1)
+    Path(os.path.join(args.r, "POV")).mkdir(parents=True, exist_ok=True)
 
-    with open(os.path.join(root_directory, "POV", str(i)+'.pov'), "r") as f:
-        content=f.readlines()
+    for i in range(len(timesteps)):
 
-    start_matrix = False
-    end_matrix = False
-    write_mesh=False
+        view.AnimationTime = timesteps[i]
 
-    start_camera = False
-    end_camera = False
+        ExportView(os.path.join(args.r, "POV", str(i)+'.pov'), view=renderView1)
 
-    start_ls = False
-    end_ls = False
+        with open(os.path.join(args.r, "POV", str(i)+'.pov'), "r") as f:
+            content=f.readlines()
 
-    with open(os.path.join(root_directory, "POV", str(i)+'.pov'), "w") as f: 
-        f.write('#include "my setting.inc" \n')
-        f.write('#include "camera.inc" \n')
-        f.write('#include "light_source.inc" \n')
-        objnum=0
-        for line in content:
+        start_matrix = False
+        end_matrix = False
+        write_mesh=False
 
-            if 'camera' in line:
-                start_camera = True
-                info = ""
+        start_camera = False
+        end_camera = False
 
-            if start_camera and not end_camera:
-                info += line + "\n"
-                if '}' in line:
-                    end_camera = True
+        start_ls = False
+        end_ls = False
 
-            if end_camera and not os.path.exists(os.path.join(root_directory, "POV", 'camera.inc')):
-                with open(os.path.join(root_directory, "POV", 'camera.inc'),"w") as f_cam:
-                    f_cam.write(info)
+        with open(os.path.join(args.r, "POV", str(i)+'.pov'), "w") as f: 
+            f.write('#include "my setting.inc" \n')
+            f.write('#include "camera.inc" \n')
+            f.write('#include "light_source.inc" \n')
+            objnum=0
+            for line in content:
 
-            if 'light_source' in line and not start_ls:
-                start_ls = True
-                info = ""
+                if 'camera' in line:
+                    start_camera = True
+                    info = ""
 
-            if "mesh2" in line:
-                end_ls = True
-                write_mesh=True
+                if start_camera and not end_camera:
+                    info += line + "\n"
+                    if '}' in line:
+                        end_camera = True
 
-            if "matrix" in line: 
-                start_matrix = True
-                end_ls = True
+                if end_camera and not os.path.exists(os.path.join(args.r, "POV", 'camera.inc')):
+                    with open(os.path.join(args.r, "POV", 'camera.inc'),"w") as f_cam:
+                        f_cam.write(info)
 
-            if start_ls and not end_ls:
-                info += line + '\n'
+                if 'light_source' in line and not start_ls:
+                    start_ls = True
+                    info = ""
 
-            if end_ls and not os.path.exists(os.path.join(root_directory, "POV", 'light_source.inc')):
-                with open(os.path.join(root_directory, "POV", 'light_source.inc'),"w") as f_ls:
-                    f_ls.write(info)
+                if "mesh2" in line:
+                    end_ls = True
+                    write_mesh=True
 
-            if start_matrix and ">" in line:
-                end_matrix = True
+                if "matrix" in line: 
+                    start_matrix = True
+                    end_ls = True
 
-            if write_mesh:
-                f.write(line)
+                if start_ls and not end_ls:
+                    info += line + '\n'
 
-            if end_matrix:
-                if objnum == 0:
-                    f.write("material {milk}")
-                else:
-                    f.write("material {gate}")
-                start_matrix = end_matrix = False
-                objnum+=1
-                f.write("}")
-                write_mesh = False
+                if end_ls and not os.path.exists(os.path.join(args.r, "POV", 'light_source.inc')):
+                    with open(os.path.join(args.r, "POV", 'light_source.inc'),"w") as f_ls:
+                        f_ls.write(info)
+
+                if start_matrix and ">" in line:
+                    end_matrix = True
+
+                if write_mesh:
+                    f.write(line)
+
+                if end_matrix:
+                    if objnum == 0:
+                        f.write("material {milk}")
+                    else:
+                        f.write("material {gate}")
+                    start_matrix = end_matrix = False
+                    objnum+=1
+                    f.write("}")
+                    write_mesh = False
 
