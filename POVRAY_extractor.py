@@ -7,9 +7,10 @@ import os
 
 def parse_args():
     parser = ArgumentParser()
-    parser.add_argument("--r", "-r", type=str, help="args.r")
+    parser.add_argument("--r", "-r", type=str, help="root directory")
     parser.add_argument("--p", "-p", type=str, help='predix of data')
     parser.add_argument("--t", "-t", type=str, help="target variable name")
+    parser.add_argument("--o", "-o", type=str, help="output directory")
     args = parser.parse_args()
     return args
 
@@ -34,15 +35,15 @@ if __name__ == '__main__':
     view = GetAnimationScene()
     renderView1 = GetActiveViewOrCreate('RenderView')
 
-    Path(os.path.join(args.r, "POV")).mkdir(parents=True, exist_ok=True)
+    Path(args.o).mkdir(parents=True, exist_ok=True)
 
     for i in range(len(timesteps)):
 
         view.AnimationTime = timesteps[i]
 
-        ExportView(os.path.join(args.r, "POV", str(i)+'.pov'), view=renderView1)
+        ExportView(os.path.join(args.o, str(i)+'.pov'), view=renderView1)
 
-        with open(os.path.join(args.r, "POV", str(i)+'.pov'), "r") as f:
+        with open(os.path.join(args.o, str(i)+'.pov'), "r") as f:
             content=f.readlines()
 
         start_matrix = False
@@ -55,7 +56,7 @@ if __name__ == '__main__':
         start_ls = False
         end_ls = False
 
-        with open(os.path.join(args.r, "POV", str(i)+'.pov'), "w") as f: 
+        with open(os.path.join(args.o, str(i)+'.pov'), "w") as f: 
             f.write('#include "my setting.inc" \n')
             f.write('#include "camera.inc" \n')
             f.write('#include "light_source.inc" \n')
