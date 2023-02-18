@@ -72,8 +72,8 @@ if __name__ == '__main__':
                     if '}' in line:
                         end_camera = True
 
-                if end_camera and not os.path.exists(os.path.join(args.r, "POV", 'camera.inc')):
-                    with open(os.path.join(args.r, "POV", 'camera.inc'),"w") as f_cam:
+                if end_camera and not os.path.exists(os.path.join(args.o, 'camera.inc')):
+                    with open(os.path.join(args.o, 'camera.inc'),"w") as f_cam:
                         f_cam.write(info)
 
                 if 'light_source' in line and not start_ls:
@@ -91,8 +91,8 @@ if __name__ == '__main__':
                 if start_ls and not end_ls:
                     info += line + '\n'
 
-                if end_ls and not os.path.exists(os.path.join(args.r, "POV", 'light_source.inc')):
-                    with open(os.path.join(args.r, "POV", 'light_source.inc'),"w") as f_ls:
+                if end_ls and not os.path.exists(os.path.join(args.o, 'light_source.inc')):
+                    with open(os.path.join(args.o, 'light_source.inc'),"w") as f_ls:
                         f_ls.write(info)
 
                 if start_matrix and ">" in line:
