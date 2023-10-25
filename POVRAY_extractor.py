@@ -19,6 +19,11 @@ if __name__ == '__main__':
     args = parse_args()
 
     files = Glob(path = os.path.join(args.r, args.p) )
+    if(len(files)==0):
+        print(f"No file found in {os.path.join(args.r, args.p)}")
+        exit(-1)
+    else:
+        print(f"{len(files)} files found in {os.path.join(args.r, args.p)}")
     reader = OpenDataFile(files)
     Show()
     Render()
